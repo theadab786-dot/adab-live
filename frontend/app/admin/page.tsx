@@ -35,6 +35,9 @@ import { LineupsTab } from "@/components/admin/LineupsTab";
 import { SoundTab } from "@/components/admin/SoundTab";
 import { MediaGalleryTab } from "@/components/admin/MediaGalleryTab";
 import { ClientGuideTab } from "@/components/admin/ClientGuideTab";
+import defaultSiteData from "@/data/site.json";
+import defaultLineups from "@/data/lineups.json";
+import defaultSoundCatalog from "@/data/sound.json";
 
 type AdminTab =
   | "bookings"
@@ -55,11 +58,11 @@ export default function AdminDashboardPage() {
   const [loadingBlocked, setLoadingBlocked] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<FirestoreBookingDoc | null>(null);
 
-  // Content state for site, lineups, sound
-  const [siteData, setSiteData] = useState<any>(null);
-  const [lineupsData, setLineupsData] = useState<any[]>([]);
-  const [soundData, setSoundData] = useState<any[]>([]);
-  const [loadingContent, setLoadingContent] = useState(true);
+  // Content state for site, lineups, sound initialized with defaults
+  const [siteData, setSiteData] = useState<any>(defaultSiteData);
+  const [lineupsData, setLineupsData] = useState<any[]>(defaultLineups);
+  const [soundData, setSoundData] = useState<any[]>(defaultSoundCatalog);
+  const [loadingContent, setLoadingContent] = useState(false);
 
   // New blocked date form state
   const [newBlockedDate, setNewBlockedDate] = useState("");
@@ -78,14 +81,17 @@ export default function AdminDashboardPage() {
 
   // Fetch all site content
   const fetchContent = async () => {
-    setLoadingContent(true);
     try {
       const res = await fetch("/api/admin/content");
       const json = await res.json();
       if (json.success && json.data) {
-        setSiteData(json.data.site);
-        setLineupsData(json.data.lineups || []);
-        setSoundData(json.data.sound || []);
+        if (json.data.site) setSiteData(json.data.site);
+        if (json.data.lineups && Array.isArray(json.data.lineups) && json.data.lineups.length > 0) {
+          setLineupsData(json.data.lineups);
+        }
+        if (json.data.sound && Array.isArray(json.data.sound) && json.data.sound.length > 0) {
+          setSoundData(json.data.sound);
+        }
       }
     } catch (err) {
       console.error("Failed to load admin content:", err);

@@ -3,6 +3,9 @@ import { BookingSchema } from "@/lib/schemas";
 import { isDateBlockedOrConfirmed, saveBookingToFirestore } from "@/lib/bookingsService";
 import { sendBookingNotificationEmails } from "@/lib/email";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 // Simple in-memory rate limiting map (IP -> array of timestamps)
 const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes

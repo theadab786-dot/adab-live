@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Save,
   Loader2,
@@ -47,6 +47,29 @@ export function SiteInfoTab({ initialData, onRefresh }: SiteInfoTabProps) {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Sync state if initialData loads or updates
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        bandName: initialData?.bandName || "Adab Live",
+        tagline: initialData?.tagline || "",
+        phone: initialData?.phone || "",
+        whatsapp: initialData?.whatsapp || "",
+        email: initialData?.email || "",
+        address: initialData?.address || "",
+        socials: {
+          instagram: initialData?.socials?.instagram || "",
+          youtube: initialData?.socials?.youtube || "",
+          facebook: initialData?.socials?.facebook || "",
+        },
+        aboutText: initialData?.aboutText || "",
+        heroImage: initialData?.heroImage || "/images/hero-cover.jpg",
+        aboutImage: initialData?.aboutImage || "/images/hero-cover.jpg",
+        clips: initialData?.clips || [],
+      });
+    }
+  }, [initialData]);
 
   // Field change helper
   const updateField = (field: string, value: any) => {

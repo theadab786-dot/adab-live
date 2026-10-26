@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Save,
@@ -60,6 +60,13 @@ export function SoundTab({ initialSound = [], onRefresh }: SoundTabProps) {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Sync state if initialSound loads or changes
+  useEffect(() => {
+    if (initialSound && initialSound.length > 0) {
+      setSoundItems(initialSound);
+    }
+  }, [initialSound]);
 
   // Field change
   const handleUpdateItem = (index: number, field: keyof SoundItem, value: any) => {

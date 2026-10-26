@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllBlockedDates } from "@/lib/bookingsService";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET(req: NextRequest) {
   try {
     const blockedDates = await getAllBlockedDates();
-    return NextResponse.json({ blockedDates });
+    return NextResponse.json({ blockedDates: blockedDates || [] });
   } catch (error: any) {
     console.error("Error fetching blocked dates route handler:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch blocked dates", blockedDates: [] },
-      { status: 500 }
-    );
+    return NextResponse.json({ blockedDates: [] });
   }
 }

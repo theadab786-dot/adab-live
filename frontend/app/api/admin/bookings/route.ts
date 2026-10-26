@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllBookings } from "@/lib/bookingsService";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status") || "all";
 
     const bookings = await getAllBookings(status);
-    return NextResponse.json({ bookings });
+    return NextResponse.json({ bookings: bookings || [] });
   } catch (error: any) {
     console.error("Error fetching admin bookings:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch booking requests", bookings: [] },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch booking requests", bookings: [] });
   }
 }

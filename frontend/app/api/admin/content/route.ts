@@ -9,6 +9,13 @@ import {
   getMusiciansData,
   saveMusiciansData,
 } from "@/lib/contentService";
+import defaultSiteData from "@/data/site.json";
+import defaultLineups from "@/data/lineups.json";
+import defaultSoundCatalog from "@/data/sound.json";
+import defaultMusicians from "@/data/musicians.json";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,14 +49,26 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: { site, lineups, sound, musicians },
+      data: {
+        site: site || defaultSiteData,
+        lineups: lineups && lineups.length > 0 ? lineups : defaultLineups,
+        sound: sound && sound.length > 0 ? sound : defaultSoundCatalog,
+        musicians: musicians && musicians.length > 0 ? musicians : defaultMusicians,
+      },
     });
   } catch (error: any) {
     console.error("GET /api/admin/content error:", error);
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch content" },
-      { status: 500 }
-    );
+    // Never fail with 500; gracefully return defaults so the owner dashboard remains functional
+    return NextResponse.json({
+      success: true,
+      warning: "Loaded fallback catalog data due to server error",
+      data: {
+        site: defaultSiteData,
+        lineups: defaultLineups,
+        sound: defaultSoundCatalog,
+        musicians: defaultMusicians,
+      },
+    });
   }
 }
 

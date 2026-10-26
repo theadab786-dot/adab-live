@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Save,
@@ -46,6 +46,13 @@ export function LineupsTab({ initialLineups = [], onRefresh }: LineupsTabProps) 
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Sync state when initialLineups loads or changes
+  useEffect(() => {
+    if (initialLineups && initialLineups.length > 0) {
+      setLineups(initialLineups);
+    }
+  }, [initialLineups]);
 
   // Field change
   const handleUpdateLineup = (index: number, field: keyof LineupItem, value: any) => {

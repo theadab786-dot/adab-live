@@ -1,4 +1,4 @@
-import { adminDb } from "./firebaseAdmin";
+import { getAdminDb } from "./firebaseAdmin";
 import { BookingPayload, BlockedDatePayload } from "./schemas";
 import { sendBookingStatusEmail } from "./email";
 
@@ -70,20 +70,21 @@ const devBlockedDatesMemory: { date: string; reason: string; createdAt?: string 
 ];
 
 export async function isDateBlockedOrConfirmed(dateStr: string): Promise<{ blocked: boolean; reason?: string }> {
-  if (!adminDb) {
+  const db = getAdminDb();
+  if (!db) {
     const found = devBlockedDatesMemory.find((b) => b.date === dateStr);
     return found ? { blocked: true, reason: found.reason } : { blocked: false };
   }
 
   try {
-    const blockedRef = adminDb.collection("blockedDates").doc(dateStr);
+    const blockedRef = db.collection("blockedDates").doc(dateStr);
     const blockedDoc = await blockedRef.get();
     if (blockedDoc.exists) {
       const data = blockedDoc.data();
       return { blocked: true, reason: data?.reason || "Date manually blocked by band owner" };
     }
 
-    const confirmedQuery = await adminDb
+    const confirmedQuery = await db
       .collection("bookings")
       .where("event.date", "==", dateStr)
       .where("status", "==", "confirmed")
@@ -102,14 +103,15 @@ export async function isDateBlockedOrConfirmed(dateStr: string): Promise<{ block
 }
 
 export async function getAllBlockedDates(): Promise<{ date: string; reason: string }[]> {
-  if (!adminDb) {
+  const db = getAdminDb();
+  if (!db) {
     return devBlockedDatesMemory;
   }
 
   try {
     const results: { date: string; reason: string }[] = [];
 
-    const blockedSnapshot = await adminDb.collection("blockedDates").get();
+    const blockedSnapshot = await db.collection("blockedDates").get();
     blockedSnapshot.forEach((doc) => {
       const data = doc.data();
       results.push({
@@ -118,7 +120,7 @@ export async function getAllBlockedDates(): Promise<{ date: string; reason: stri
       });
     });
 
-    const confirmedSnapshot = await adminDb
+    const confirmedSnapshot = await db
       .collection("bookings")
       .where("status", "==", "confirmed")
       .get();
@@ -150,9 +152,10 @@ export async function saveBookingToFirestore(payload: BookingPayload): Promise<s
     createdAt: new Date().toISOString(),
   };
 
-  if (adminDb) {
+  const db = getAdminDb();
+  if (db) {
     try {
-      await adminDb.collection("bookings").doc(customId).set(bookingDoc);
+      await db.collection("bookings").doc(customId).set(bookingDoc);
     } catch (error) {
       console.error("Failed to save booking to Firestore, saving to dev memory:", error);
       devBookingsMemory.unshift(bookingDoc);
@@ -165,7 +168,8 @@ export async function saveBookingToFirestore(payload: BookingPayload): Promise<s
 }
 
 export async function getAllBookings(statusFilter?: string): Promise<FirestoreBookingDoc[]> {
-  if (!adminDb) {
+  const db = getAdminDb();
+  if (!db) {
     if (statusFilter && statusFilter !== "all") {
       return devBookingsMemory.filter((b) => b.status === statusFilter);
     }
@@ -173,7 +177,7 @@ export async function getAllBookings(statusFilter?: string): Promise<FirestoreBo
   }
 
   try {
-    let query: FirebaseFirestore.Query = adminDb.collection("bookings");
+    let query: FirebaseFirestore.Query = db.collection("bookings");
     if (statusFilter && statusFilter !== "all") {
       query = query.where("status", "==", statusFilter);
     }
@@ -193,10 +197,11 @@ export async function getAllBookings(statusFilter?: string): Promise<FirestoreBo
 
 export async function updateBookingStatus(id: string, newStatus: "confirmed" | "declined"): Promise<{ success: boolean; booking?: FirestoreBookingDoc }> {
   let targetBooking: FirestoreBookingDoc | undefined;
+  const db = getAdminDb();
 
-  if (adminDb) {
+  if (db) {
     try {
-      const docRef = adminDb.collection("bookings").doc(id);
+      const docRef = db.collection("bookings").doc(id);
       const doc = await docRef.get();
       if (!doc.exists) {
         throw new Error("Booking not found");
@@ -207,7 +212,7 @@ export async function updateBookingStatus(id: string, newStatus: "confirmed" | "
       await docRef.update({ status: newStatus });
 
       if (newStatus === "confirmed" && targetBooking.event?.date) {
-        await adminDb.collection("blockedDates").doc(targetBooking.event.date).set({
+        await db.collection("blockedDates").doc(targetBooking.event.date).set({
           date: targetBooking.event.date,
           reason: `Confirmed event booking (${id})`,
           createdAt: new Date().toISOString(),
@@ -239,9 +244,10 @@ export async function updateBookingStatus(id: string, newStatus: "confirmed" | "
 }
 
 export async function addBlockedDate(date: string, reason: string): Promise<boolean> {
-  if (adminDb) {
+  const db = getAdminDb();
+  if (db) {
     try {
-      await adminDb.collection("blockedDates").doc(date).set({
+      await db.collection("blockedDates").doc(date).set({
         date,
         reason,
         createdAt: new Date().toISOString(),
@@ -262,9 +268,10 @@ export async function addBlockedDate(date: string, reason: string): Promise<bool
 }
 
 export async function removeBlockedDate(date: string): Promise<boolean> {
-  if (adminDb) {
+  const db = getAdminDb();
+  if (db) {
     try {
-      await adminDb.collection("blockedDates").doc(date).delete();
+      await db.collection("blockedDates").doc(date).delete();
     } catch (error) {
       console.error("Failed to delete blocked date from Firestore:", error);
     }
