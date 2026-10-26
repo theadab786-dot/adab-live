@@ -211,6 +211,15 @@ export async function updateBookingStatus(id: string, newStatus: "confirmed" | "
           reason: `Confirmed event booking (${id})`,
           createdAt: new Date().toISOString(),
         });
+      } else if (newStatus === "declined" && targetBooking.event?.date) {
+        const blockedDocRef = adminDb.collection("blockedDates").doc(targetBooking.event.date);
+        const blockedDoc = await blockedDocRef.get();
+        if (blockedDoc.exists) {
+          const bData = blockedDoc.data();
+          if (bData?.reason?.includes(id)) {
+            await blockedDocRef.delete();
+          }
+        }
       }
     } catch (error) {
       console.error("Firestore status update failed, using dev memory:", error);
@@ -226,6 +235,11 @@ export async function updateBookingStatus(id: string, newStatus: "confirmed" | "
         date: devFound.event.date,
         reason: `Confirmed event booking (${id})`,
       });
+    } else if (newStatus === "declined" && devFound.event?.date) {
+      const bIdx = devBlockedDatesMemory.findIndex((b) => b.date === devFound.event.date && b.reason.includes(id));
+      if (bIdx >= 0) {
+        devBlockedDatesMemory.splice(bIdx, 1);
+      }
     }
   }
 

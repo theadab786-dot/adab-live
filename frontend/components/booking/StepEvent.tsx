@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import { BookingFormData } from "./BookingModal";
-import { Calendar, Clock, MapPin, Users, Building, Tag } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Building, Tag, AlertCircle } from "lucide-react";
 
 export interface StepEventProps {
   register: UseFormRegister<BookingFormData>;
@@ -42,6 +42,25 @@ export function StepEvent({ register, errors, watch, setValue }: StepEventProps)
 
   const [prevEventType, setPrevEventType] = useState(currentEventType);
   const [customText, setCustomText] = useState(() => extractCustomText(currentEventType));
+  const [blockedDates, setBlockedDates] = useState<{ date: string; reason: string }[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/blocked-dates")
+      .then((r) => r.json())
+      .then((data) => {
+        if (isMounted && Array.isArray(data?.blockedDates)) {
+          setBlockedDates(data.blockedDates);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const selectedDate = watch ? watch("event.date") : "";
+  const blockedMatch = blockedDates.find((b) => b.date === selectedDate);
 
   if (currentEventType !== prevEventType) {
     setPrevEventType(currentEventType);
@@ -128,9 +147,17 @@ export function StepEvent({ register, errors, watch, setValue }: StepEventProps)
             type="date"
             min={new Date().toISOString().split("T")[0]}
             {...register("event.date")}
-            className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-purple-500"
+            className={`w-full px-4 py-3 rounded-xl bg-slate-50 border text-slate-900 text-sm focus:outline-none ${
+              blockedMatch ? "border-amber-400 bg-amber-50/40" : "border-slate-200 focus:border-purple-500"
+            }`}
           />
-          {errors.event?.date && (
+          {blockedMatch && (
+            <div className="p-2.5 mt-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>This date is unavailable ({blockedMatch.reason}). Please select another date.</span>
+            </div>
+          )}
+          {errors.event?.date && !blockedMatch && (
             <p className="text-xs text-red-500 mt-1">{errors.event.date.message}</p>
           )}
         </div>

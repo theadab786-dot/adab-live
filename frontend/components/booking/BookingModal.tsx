@@ -159,6 +159,23 @@ export function BookingModal() {
 
     const isValid = fieldsToValidate.length > 0 ? await trigger(fieldsToValidate as any) : true;
 
+    if (isValid && currentStep === 4) {
+      try {
+        const bdRes = await fetch("/api/blocked-dates");
+        const bdData = await bdRes.json();
+        if (Array.isArray(bdData?.blockedDates)) {
+          const match = bdData.blockedDates.find((b: any) => b.date === formValues.event?.date);
+          if (match) {
+            setSubmitError(`The selected date (${formValues.event.date}) is unavailable: ${match.reason}. Please select an open date.`);
+            return;
+          }
+        }
+      } catch {
+        // network fallback
+      }
+      setSubmitError(null);
+    }
+
     if (isValid && sequenceIndex < stepsSequence.length - 1) {
       setCurrentStep(stepsSequence[sequenceIndex + 1]);
     }
@@ -174,26 +191,35 @@ export function BookingModal() {
     setIsSubmitting(true);
     setSubmitError(null);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout safeguard
+
     try {
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
+      const resData = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to process booking request");
+        throw new Error(resData.error || "Failed to process booking request");
       }
 
-      const resData = await response.json();
       setSubmittedBookingId(resData.bookingId || `ADB-${Math.floor(1000 + Math.random() * 9000)}`);
       sessionStorage.removeItem(SESSION_STORAGE_KEY);
     } catch (err: any) {
-      // If API route handler not initialized yet (Phase 4 mock fallback), generate mock success ID
-      const mockId = `ADB-${Math.floor(1000 + Math.random() * 9000)}`;
-      setSubmittedBookingId(mockId);
-      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      clearTimeout(timeoutId);
+      console.error("Booking submission error:", err);
+      const isAbort = err.name === "AbortError";
+      const message = isAbort
+        ? "The request took too long to respond. Please check your connection and try again."
+        : err.message || "Failed to submit booking request. Please try again.";
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }

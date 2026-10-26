@@ -23,11 +23,13 @@ export async function sendBookingNotificationEmails(booking: BookingPayload & { 
   }
 
   try {
-    await resend.emails.send({
-      from: `Adab Live Bookings <${FROM_EMAIL}>`,
-      to: OWNER_EMAIL,
-      subject: `🎵 New Booking Request: ${booking.contact.name} (${booking.event.date})`,
-      html: `
+    // Dispatch both owner notification and customer acknowledgement in parallel
+    const [ownerRes, customerRes] = await Promise.all([
+      resend.emails.send({
+        from: `Adab Live Bookings <${FROM_EMAIL}>`,
+        to: OWNER_EMAIL,
+        subject: `🎵 New Booking Request: ${booking.contact.name} (${booking.event.date})`,
+        html: `
         <div style="font-family: sans-serif; padding: 20px; color: #111;">
           <h2>New Booking Request Received!</h2>
           <p><strong>Booking ID:</strong> ${booking.id}</p>
@@ -46,13 +48,12 @@ export async function sendBookingNotificationEmails(booking: BookingPayload & { 
           ${booking.contact.notes ? `<p><strong>Notes/Requests:</strong> ${booking.contact.notes}</p>` : ""}
         </div>
       `,
-    });
-
-    await resend.emails.send({
-      from: `Adab Live <${FROM_EMAIL}>`,
-      to: booking.contact.email,
-      subject: `We received your booking request! - Adab Live`,
-      html: `
+      }),
+      resend.emails.send({
+        from: `Adab Live <${FROM_EMAIL}>`,
+        to: booking.contact.email,
+        subject: `We received your booking request! - Adab Live`,
+        html: `
         <div style="font-family: sans-serif; padding: 20px; color: #111;">
           <h2>Hello ${booking.contact.name},</h2>
           <p>Thank you for reaching out to <strong>Adab Live</strong>!</p>
@@ -62,12 +63,27 @@ export async function sendBookingNotificationEmails(booking: BookingPayload & { 
           <p>Best regards,<br/><strong>Adab Live Team</strong></p>
         </div>
       `,
-    });
+      }),
+    ]);
+
+    if (ownerRes.error || customerRes.error) {
+      console.error("[Resend API Warning] Email dispatch encountered errors:", {
+        ownerError: ownerRes.error,
+        customerError: customerRes.error,
+      });
+      return {
+        success: false,
+        mode: "live",
+        error: ownerRes.error?.message || customerRes.error?.message || "Email delivery failed",
+        ownerError: ownerRes.error,
+        customerError: customerRes.error,
+      };
+    }
 
     return { success: true, mode: "live" };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to send emails via Resend:", error);
-    return { success: false, error };
+    return { success: false, error: error?.message || "Failed to dispatch email" };
   }
 }
 
@@ -113,15 +129,19 @@ export async function sendBookingStatusEmail(
     `;
 
   try {
-    await resend.emails.send({
+    const res = await resend.emails.send({
       from: `Adab Live <${FROM_EMAIL}>`,
       to: booking.contact.email,
       subject,
       html,
     });
+    if (res.error) {
+      console.error("[Resend API Warning] Status email failed:", res.error);
+      return { success: false, mode: "live", error: res.error.message };
+    }
     return { success: true, mode: "live" };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to send status email via Resend:", error);
-    return { success: false, error };
+    return { success: false, error: error?.message || "Failed to dispatch status email" };
   }
 }
