@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getLineupsData, getMusiciansData, getSiteData } from "@/lib/contentService";
 import { LiveBandClient } from "./LiveBandClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteData = await getSiteData();

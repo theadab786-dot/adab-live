@@ -4,7 +4,7 @@ import { getSiteData } from "@/lib/contentService";
 import { Phone, Mail, MapPin, MessageSquare } from "lucide-react";
 import { InstagramIcon, YoutubeIcon, FacebookIcon } from "../../components/SocialIcons";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteData = await getSiteData();

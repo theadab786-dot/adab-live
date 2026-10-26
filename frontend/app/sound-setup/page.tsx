@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getSoundData, getSiteData } from "@/lib/contentService";
 import { SoundSetupClient } from "./SoundSetupClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteData = await getSiteData();

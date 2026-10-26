@@ -9,7 +9,7 @@ import { ClipsSection } from "../components/ClipsSection";
 import { TrustStats } from "../components/TrustStats";
 import { BookNowCTAButton } from "./BookNowCTAButton";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function HomePage() {
   const [siteData, lineupsData, soundData] = await Promise.all([

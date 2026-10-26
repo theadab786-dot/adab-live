@@ -8,7 +8,12 @@ import { BookNowButton } from "./BookNowButton";
 
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  const lineups = await getLineupsData();
+  return lineups.map((l: any) => ({ slug: l.slug }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;

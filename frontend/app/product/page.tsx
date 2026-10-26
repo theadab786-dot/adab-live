@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Music, Speaker, ArrowRight } from "lucide-react";
 import { getLineupsData, getSoundData, getSiteData } from "@/lib/contentService";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteData = await getSiteData();

@@ -1,34 +1,52 @@
-import { initializeApp, getApps, cert, getApp } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-import { getAuth } from "firebase-admin/auth";
+import { initializeApp, getApps, cert, getApp, App } from "firebase-admin/app";
+import { getFirestore, Firestore } from "firebase-admin/firestore";
+import { getAuth, Auth } from "firebase-admin/auth";
 
-let app;
+let app: App | undefined;
+let adminDbInstance: Firestore | null = null;
+let adminAuthInstance: Auth | null = null;
 
 if (!getApps().length) {
   try {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY
-      ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
-      : undefined;
+    const rawKey = process.env.FIREBASE_PRIVATE_KEY;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "adab-live";
 
-    if (process.env.FIREBASE_CLIENT_EMAIL && privateKey) {
+    if (clientEmail && rawKey) {
+      let privateKey = rawKey.trim();
+      // Strip surrounding quotes if user copied them into Vercel UI
+      if (
+        (privateKey.startsWith('"') && privateKey.endsWith('"')) ||
+        (privateKey.startsWith("'") && privateKey.endsWith("'"))
+      ) {
+        privateKey = privateKey.slice(1, -1);
+      }
+      privateKey = privateKey.replace(/\\n/g, "\n");
+
       app = initializeApp({
         credential: cert({
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "adab-live",
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: privateKey,
+          projectId,
+          clientEmail,
+          privateKey,
         }),
       });
-    } else {
-      app = initializeApp({
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "adab-live",
-      });
+
+      adminDbInstance = getFirestore(app);
+      adminAuthInstance = getAuth(app);
     }
   } catch (error) {
-    console.error("Firebase Admin initialization failed:", error);
+    console.warn("Firebase Admin credentials setup skipped or failed:", error);
   }
 } else {
-  app = getApp();
+  try {
+    app = getApp();
+    adminDbInstance = getFirestore(app);
+    adminAuthInstance = getAuth(app);
+  } catch (err) {
+    console.warn("Firebase Admin getApp fallback failed:", err);
+  }
 }
 
-export const adminDb = app ? getFirestore(app) : null;
-export const adminAuth = app ? getAuth(app) : null;
+export const adminDb = adminDbInstance;
+export const adminAuth = adminAuthInstance;
+

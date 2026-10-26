@@ -6,7 +6,7 @@ import { Users, Award, ShieldCheck, Music, CheckCircle2, ArrowRight } from "luci
 import { getSiteData } from "@/lib/contentService";
 import { TrustStats } from "../../components/TrustStats";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteData = await getSiteData();
