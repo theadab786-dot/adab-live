@@ -1,0 +1,79 @@
+[
+  {
+    "slug": "solo",
+    "name": "Solo",
+    "tagline": "Intimate vocal & guitar experience for lounge and cocktail hours",
+    "description": "Perfect for small gatherings, cocktail receptions, and intimate dinners. A soulful solo performer blending smooth guitar with warm lead vocals.",
+    "members": [
+      {
+        "role": "Lead Vocalist & Guitarist",
+        "instrument": "Guitar, Vocals"
+      }
+    ],
+    "photos": [
+      "/images/lineups/solo-stage-wide.jpg",
+      "/images/lineups/solo-portrait.jpg",
+      "/images/lineups/solo-profile.jpg",
+      "/images/lineups/solo-performance.jpg"
+    ],
+    "basePrice": 350,
+    "priceNote": "Starting price for 3-hour event"
+  },
+  {
+    "slug": "duet",
+    "name": "Duet",
+    "tagline": "Harmonious two-piece ensemble adding depth and energy",
+    "description": "Ideal for engagement parties, intimate weddings, and corporate receptions. Combines dual vocals, guitar, and percussion or piano for rich musical harmony.",
+    "members": [
+      {
+        "role": "Lead Vocalist & Guitar",
+        "instrument": "Guitar, Vocals"
+      },
+      {
+        "role": "Keyboardist & Backing Vocals",
+        "instrument": "Piano/Keyboard, Vocals"
+      }
+    ],
+    "photos": [
+      "/images/lineups/duet-1.jpg",
+      "/images/lineups/duet-2.jpg"
+    ],
+    "basePrice": 650,
+    "priceNote": "Starting price for 3-hour event"
+  },
+  {
+    "slug": "full-band",
+    "name": "Five-Piece Band",
+    "tagline": "High-octane 5-piece live show setup for weddings, grand galas, and festivals",
+    "description": "The ultimate party experience! Complete with lead vocals, electric guitars, bass, keys, and full drum kit. Delivers an unforgettable stage concert performance.",
+    "members": [
+      {
+        "role": "Front Vocalist",
+        "instrument": "Lead Vocals"
+      },
+      {
+        "role": "Lead Guitarist",
+        "instrument": "Electric Guitar"
+      },
+      {
+        "role": "Bass Guitarist",
+        "instrument": "Bass Guitar"
+      },
+      {
+        "role": "Keyboardist",
+        "instrument": "Synthesizer / Piano"
+      },
+      {
+        "role": "Drummer",
+        "instrument": "Full Drum Kit"
+      }
+    ],
+    "photos": [
+      "/images/lineups/five-piece-portrait.jpg",
+      "/images/lineups/five-piece-acoustic.jpg",
+      "/uploads/img_20241203_200057-1793018870403.jpg"
+    ],
+    "basePrice": 1600,
+    "priceNote": "Starting price for 3-hour event"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "vocalist",
+    "role": "Guest / Second Vocalist",
+    "pricePerEvent": 300
+  },
+  {
+    "id": "guitarist",
+    "role": "Solo Guitarist (Acoustic / Lead)",
+    "pricePerEvent": 300
+  },
+  {
+    "id": "keyboardist",
+    "role": "Keyboardist / Synthesist",
+    "pricePerEvent": 300
+  },
+  {
+    "id": "drummer",
+    "role": "Professional Drummer / Percussionist",
+    "pricePerEvent": 350
+  },
+  {
+    "id": "saxophonist",
+    "role": "Saxophonist",
+    "pricePerEvent": 400
+  },
+  {
+    "id": "violinist",
+    "role": "Electric / Classical Violinist",
+    "pricePerEvent": 400
+  }
+]

@@ -1,0 +1,180 @@
+[
+  {
+    "id": "basic-setup",
+    "name": "Basic Setup",
+    "setupNumber": "1",
+    "shortName": "Basic Setup",
+    "tagline": "Ideal for intimate private gatherings, lounge sessions & acoustic sets",
+    "badge": "20 to 40+ People Gathering",
+    "crowdCapacity": "20 to 40+ people gathering",
+    "price": 10000,
+    "minPrice": 10000,
+    "maxPrice": 15000,
+    "priceRange": "₹10,000 – ₹15,000",
+    "priceDisplay": "10k to 15k",
+    "category": "package",
+    "operators": "1 Sound Operator",
+    "speakers": "2/4 × 15-inch JBL Powered Speakers",
+    "monitors": "Optional add-on",
+    "bass": "Optional add-on (Extra Bass)",
+    "mics": "2 Cordless / Wireless Mics",
+    "cabling": "All wire connectivity sound men will provide",
+    "soundBrands": ["JBL"],
+    "lighting": "Available as separate add-on",
+    "description": "Clean, reliable, and high-fidelity sound setup tailored for 20 to 40+ guests. Equipped with 2/4 15-inch JBL powered speakers, 2 cordless handheld mics, 1 dedicated sound operator, and all wire connectivity handled on-site by our sound crew.",
+    "features": [
+      "2/4 × 15-inch JBL Powered Speakers",
+      "1 Dedicated Sound Operator on-site",
+      "2 Cordless / Wireless Microphones",
+      "All wire connectivity provided by sound men",
+      "Covers 20 to 40+ people gathering",
+      "Customizable: Extra mic, extra speaker & extra bass can be added"
+    ],
+    "additionalItems": [
+      "Extra Mic",
+      "Extra Speaker",
+      "Extra Bass"
+    ],
+    "additionalItemsNote": "Additional items like Extra Mic, Extra Speaker, and Extra Bass can be added into this setup.",
+    "photos": [
+      "/images/sound/pa-basic.jpg"
+    ]
+  },
+  {
+    "id": "setup-2",
+    "name": "Setup 2 (Pro Stage Audio)",
+    "setupNumber": "2",
+    "shortName": "Setup 2",
+    "tagline": "High-impact stage sound with dual bass and custom artist mic routing",
+    "badge": "Mid-Sized Gatherings & Stage Events",
+    "crowdCapacity": "Mid-sized gatherings, banquet halls & live stage events",
+    "price": 20000,
+    "minPrice": 20000,
+    "maxPrice": 35000,
+    "priceRange": "₹20,000 – ₹35,000",
+    "priceDisplay": "20k to 35k",
+    "category": "package",
+    "operators": "2 Sound Operators",
+    "speakers": "2/4 × JBL / RCF 35-inch Speakers",
+    "monitors": "2/4 × 15-inch Stage Monitors",
+    "bass": "2 Dedicated Bass / Subwoofers",
+    "mics": "Mics & wires provided by sound men according to artists & instruments",
+    "cabling": "All wire connectivity & audio patch lines provided by sound men",
+    "soundBrands": ["JBL", "RCF"],
+    "lighting": "Stage lighting available on request",
+    "description": "Engineered for live music acts, party gigs, and corporate stages. Includes 2/4 JBL or RCF 35-inch speakers, 2/4 15-inch stage floor monitors, 2 heavy punch subwoofers (bass), 2 professional sound operators, and microphones and wiring customized directly to artists and instruments.",
+    "features": [
+      "2/4 × JBL / RCF 35-inch Main Speakers",
+      "2/4 × 15-inch Stage Monitors",
+      "2 Dedicated Bass Subwoofers",
+      "2 Professional Sound Operators",
+      "Mics and wires provided according to artists and instruments",
+      "Complete wire connectivity and stage patch cabling provided"
+    ],
+    "photos": [
+      "/images/sound/pa-pro.jpg"
+    ]
+  },
+  {
+    "id": "classic-setup",
+    "name": "Classic Setup (Concert & Festival Production)",
+    "setupNumber": "Classic",
+    "shortName": "Classic Setup",
+    "tagline": "Full-scale arena production with line arrays, moving lights, truss & crew",
+    "badge": "80 to 250 Gathering & Open Areas",
+    "crowdCapacity": "80 to 250 gathering and open areas",
+    "price": 50000,
+    "minPrice": 50000,
+    "maxPrice": 200000,
+    "priceRange": "₹50,000 – ₹2,00,000",
+    "priceDisplay": "50k to 2 Lakh",
+    "category": "package",
+    "operators": "5/7 Sound and Light Operators",
+    "speakers": "6/8 Liners (Line Arrays) + 2 Side Fills (30-inch) + 2/4 Tops (35-inch)",
+    "monitors": "4/6 × 15-inch Stage Monitors",
+    "bass": "High-output concert subwoofers integrated",
+    "lighting": "4/8 Sharpy Lights + 8/16 LED Lights with Tripods (Right & Left) + 1 Truss Rod",
+    "mics": "Mics & wires provided by sound men according to the band",
+    "cabling": "Full concert wire snakes, multi-pin connectivity & power distro provided",
+    "soundBrands": ["ORIGINAL", "DNB", "JBL", "RCF"],
+    "description": "Our premier large-format stage, audio, and light concert production. Built to energize 80 to 250+ gatherings and expansive open-air outdoor grounds. Delivers 6/8 line arrays (liners), 2 30-inch side fills, 2/4 35-inch tops, 4/6 15-inch monitors, moving Sharpy beam lights, tripod stage LEDs, 1 truss structure, 5/7 sound and light operators, and sound system options from ORIGINAL, DNB (d&b audiotechnik), JBL, or RCF.",
+    "features": [
+      "6/8 Line Arrays (Liners)",
+      "2 Side Fills (30-inch) & 2/4 Tops (35-inch)",
+      "4/6 × 15-inch Stage Floor Monitors",
+      "4/8 Sharpy Moving-Head Lights",
+      "8/16 LED Lights with Tripods (Left & Right)",
+      "1 Heavy-Duty Truss Rod / Structure",
+      "Mics and wires provided according to the band",
+      "5/7 Sound and Light Operators on-site",
+      "Covers 80 to 250 gathering and open areas",
+      "Sound Brands: ORIGINAL, DNB, JBL, RCF"
+    ],
+    "photos": [
+      "/images/sound/lights.jpg"
+    ]
+  },
+  {
+    "id": "extra-mic",
+    "name": "Extra Mic",
+    "shortName": "Extra Mic",
+    "tagline": "Wireless cordless handheld microphone with frequency receiver & stand",
+    "category": "addon",
+    "price": 1000,
+    "priceRange": "₹1,000",
+    "priceDisplay": "+₹1,000",
+    "forSetup": "basic-setup",
+    "description": "Additional cordless / wireless handheld mic with receiver, stand, and cabling for speeches, emcees, backing vocalists, or guest singers. Can be easily added to your setup.",
+    "features": [
+      "Extra Cordless / Wireless Handheld Mic",
+      "Microphone stand & clip included",
+      "Full cabling provided by sound men",
+      "Can be added in Basic Setup"
+    ],
+    "photos": [
+      "/images/sound/mics.jpg"
+    ]
+  },
+  {
+    "id": "extra-speaker",
+    "name": "Extra Speaker",
+    "shortName": "Extra Speaker",
+    "tagline": "Additional 15-inch powered speaker on stand for extended sound dispersion",
+    "category": "addon",
+    "price": 2500,
+    "priceRange": "₹2,500",
+    "priceDisplay": "+₹2,500",
+    "forSetup": "basic-setup",
+    "description": "Additional 15-inch powered active speaker on tripod stand for multi-room coverage, outdoor patio fills, or wider audience reach. Can be added to your setup.",
+    "features": [
+      "Extra 15-inch Powered Speaker",
+      "Heavy-duty tripod speaker stand",
+      "All audio wiring and connectivity provided",
+      "Can be added in Basic Setup"
+    ],
+    "photos": [
+      "/images/sound/pa-basic.jpg"
+    ]
+  },
+  {
+    "id": "extra-bass",
+    "name": "Extra Bass",
+    "shortName": "Extra Bass",
+    "tagline": "High-power active bass subwoofer for deep low-end thump & dance beats",
+    "category": "addon",
+    "price": 4000,
+    "priceRange": "₹4,000",
+    "priceDisplay": "+₹4,000",
+    "forSetup": "basic-setup",
+    "description": "High-excursion powered bass subwoofer delivering deep, vibrating low frequencies for dance floors, DJ performances, and bass-heavy tracks. Can be added to your setup.",
+    "features": [
+      "Extra Deep-Punch Bass Subwoofer",
+      "Crossover tuning & dedicated amplifier feed",
+      "All patch wiring provided by sound men",
+      "Can be added in Basic Setup"
+    ],
+    "photos": [
+      "/images/sound/pa-pro.jpg"
+    ]
+  }
+]

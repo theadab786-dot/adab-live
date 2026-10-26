@@ -1,0 +1,34 @@
+{
+  "bandName": "Adab Live",
+  "tagline": "Captivating Live Music & Premium Audio Engineering",
+  "logo": "/images/logo/logo.png",
+  "logoTransparent": "/images/logo/logo-transparent.png",
+  "logoIcon": "/images/logo/logo-icon.png",
+  "subtitle": "LIVE MUSIC | EVENTS | ENTERTAINMENT",
+  "phone": "+1 (555) 987-6543",
+  "whatsapp": "+15559876543",
+  "email": "booking@adablive.com",
+  "address": "123 Concert Avenue, Music City",
+  "socials": {
+    "instagram": "https://instagram.com/adablive",
+    "youtube": "https://youtube.com/@adablive",
+    "facebook": "https://facebook.com/adablive"
+  },
+  "aboutText": "Founded by passionate musicians and acoustic engineers, Adab Live brings magnetic energy to weddings, corporate galas, and private celebrations. Whether you need an intimate acoustic duet or a full concert stage production with professional sound gear, we deliver flawless sound and unforgettable performances.",
+  "heroImage": "/images/hero-cover.jpg",
+  "aboutImage": "/images/hero-cover.jpg",
+  "clips": [
+    {
+      "id": "1",
+      "title": "Acoustic Sunset Session - Live at Horizon Beach",
+      "type": "youtube",
+      "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+    },
+    {
+      "id": "2",
+      "title": "Full Band Wedding Reception Gala Highlights",
+      "type": "youtube",
+      "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+    }
+  ]
+}
