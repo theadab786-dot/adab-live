@@ -44,6 +44,8 @@ export function getAdminDb(): Firestore | null {
           clientEmail,
           privateKey,
         }),
+        storageBucket:
+          process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.appspot.com`,
       });
     } else {
       appInstance = getApp();
@@ -75,6 +77,26 @@ export function getAdminAuth(): Auth | null {
   }
 }
 
+let adminStorageInstance: any = null;
+
+export function getAdminStorage(): any | null {
+  try {
+    if (adminStorageInstance) return adminStorageInstance;
+    if (!appInstance) {
+      getAdminDb();
+    }
+    if (appInstance) {
+      const { getStorage } = require("firebase-admin/storage");
+      adminStorageInstance = getStorage(appInstance);
+    }
+    return adminStorageInstance;
+  } catch (error) {
+    console.warn("[Firebase Admin] Storage initialization error:", error);
+    return null;
+  }
+}
+
 // Export adminDb getter for direct imports
 export const adminDb = getAdminDb();
 export const adminAuth = getAdminAuth();
+export const adminStorage = getAdminStorage();

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import Image from "next/image";
+import { compressImage } from "@/lib/imageCompressor";
 import {
   Upload,
   Trash2,
@@ -49,7 +50,14 @@ export function PhotoManager({
       const newUrls: string[] = [];
 
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+        let file = files[i];
+
+        // Compress phone camera images client-side to ensure fast upload and stay under Vercel payload limits
+        try {
+          file = await compressImage(file);
+        } catch (compressErr) {
+          console.warn("Client compression skipped:", compressErr);
+        }
 
         // Client-side file size check (10MB limit)
         if (file.size > 10 * 1024 * 1024) {

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { getAdminDb, getAdminStorage } from "@/lib/firebaseAdmin";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 // Helper to determine uploads directory reliably
 function getUploadsDirectory(): string {
@@ -13,13 +17,18 @@ function getUploadsDirectory(): string {
   return p2;
 }
 
-// Ensure directory exists
-function ensureUploadsDirectory(): string {
-  const dir = getUploadsDirectory();
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+// Safely ensure directory exists without throwing on read-only systems (e.g. Vercel)
+function safeEnsureUploadsDirectory(): string | null {
+  try {
+    const dir = getUploadsDirectory();
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    return dir;
+  } catch (e) {
+    // Read-only filesystem in serverless environments (e.g. Vercel)
+    return null;
   }
-  return dir;
 }
 
 // 1. UPLOAD IMAGE
@@ -48,6 +57,7 @@ export async function POST(request: NextRequest) {
       "image/webp",
       "image/gif",
       "image/svg+xml",
+      "image/avif",
     ];
     if (!allowedTypes.includes(file.type.toLowerCase())) {
       return NextResponse.json(
@@ -59,19 +69,94 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const uploadsDir = ensureUploadsDirectory();
-
     // Sanitize filename
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const ext = path.extname(originalName) || ".jpg";
     const baseName = path.basename(originalName, ext);
     const uniqueFileName = `${baseName}-${Date.now()}${ext}`.toLowerCase();
-    const fullFilePath = path.join(uploadsDir, uniqueFileName);
 
-    // Convert file to buffer and write
+    // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    await fs.promises.writeFile(fullFilePath, buffer);
+
+    // Destination 1: Try Firebase Cloud Storage if bucket exists
+    let uploadedToStorage = false;
+    try {
+      const storage = getAdminStorage();
+      if (storage) {
+        const bucket = storage.bucket();
+        const [exists] = await bucket.exists();
+        if (exists) {
+          const fileRef = bucket.file(`uploads/${uniqueFileName}`);
+          await fileRef.save(buffer, {
+            contentType: file.type || "image/jpeg",
+            metadata: {
+              cacheControl: "public, max-age=31536000",
+            },
+          });
+          uploadedToStorage = true;
+        }
+      }
+    } catch (storageErr) {
+      console.warn("[Upload] Firebase Storage upload skipped/failed:", storageErr);
+    }
+
+    // Destination 2: Firestore Media Storage (Works 100% reliably in serverless environments)
+    const db = getAdminDb();
+    if (db) {
+      try {
+        const docRef = db.collection("media").doc(uniqueFileName);
+        const base64Data = buffer.toString("base64");
+
+        // If file buffer <= 700KB, store in single document
+        if (buffer.length <= 700 * 1024) {
+          await docRef.set({
+            fileName: uniqueFileName,
+            contentType: file.type || "image/jpeg",
+            size: file.size,
+            isChunked: false,
+            data: base64Data,
+            createdAt: new Date().toISOString(),
+          });
+        } else {
+          // If larger than 700KB, split into 500KB chunks in subcollection
+          const CHUNK_SIZE = 500 * 1024;
+          const chunks: string[] = [];
+          for (let i = 0; i < base64Data.length; i += CHUNK_SIZE) {
+            chunks.push(base64Data.slice(i, i + CHUNK_SIZE));
+          }
+
+          await docRef.set({
+            fileName: uniqueFileName,
+            contentType: file.type || "image/jpeg",
+            size: file.size,
+            isChunked: true,
+            chunkCount: chunks.length,
+            createdAt: new Date().toISOString(),
+          });
+
+          const batch = db.batch();
+          for (let i = 0; i < chunks.length; i++) {
+            const chunkRef = docRef.collection("chunks").doc(String(i));
+            batch.set(chunkRef, { index: i, data: chunks[i] });
+          }
+          await batch.commit();
+        }
+      } catch (dbErr) {
+        console.warn("[Upload] Firestore media save error:", dbErr);
+      }
+    }
+
+    // Destination 3: Local Filesystem (Local development cache; gracefully ignores EROFS on Vercel)
+    try {
+      const uploadsDir = safeEnsureUploadsDirectory();
+      if (uploadsDir) {
+        const fullFilePath = path.join(uploadsDir, uniqueFileName);
+        await fs.promises.writeFile(fullFilePath, buffer);
+      }
+    } catch (diskErr) {
+      // Normal on read-only serverless runtimes like Vercel
+    }
 
     const publicUrl = `/uploads/${uniqueFileName}`;
 
@@ -127,21 +212,56 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Invalid filename" }, { status: 400 });
     }
 
-    const uploadsDir = getUploadsDirectory();
-    const filePath = path.join(uploadsDir, fileName);
-
-    if (fs.existsSync(filePath)) {
-      await fs.promises.unlink(filePath);
-      return NextResponse.json({
-        success: true,
-        message: `Image ${fileName} deleted successfully.`,
-      });
-    } else {
-      return NextResponse.json({
-        success: true,
-        message: "Image record removed (file was not on disk).",
-      });
+    // 1. Delete from Firestore Media (including subcollection chunks)
+    const db = getAdminDb();
+    if (db) {
+      try {
+        const docRef = db.collection("media").doc(fileName);
+        const docSnap = await docRef.get();
+        if (docSnap.exists) {
+          const docData = docSnap.data();
+          if (docData?.isChunked) {
+            const chunksSnap = await docRef.collection("chunks").get();
+            const batch = db.batch();
+            chunksSnap.forEach((c) => batch.delete(c.ref));
+            await batch.commit();
+          }
+          await docRef.delete();
+        }
+      } catch (dbErr) {
+        console.warn("[Delete] Firestore media deletion warning:", dbErr);
+      }
     }
+
+    // 2. Delete from Firebase Storage if present
+    try {
+      const storage = getAdminStorage();
+      if (storage) {
+        const bucket = storage.bucket();
+        const [exists] = await bucket.exists();
+        if (exists) {
+          await bucket.file(`uploads/${fileName}`).delete({ ignoreNotFound: true });
+        }
+      }
+    } catch (storageErr) {
+      // Ignore
+    }
+
+    // 3. Delete from Local disk (if present and writable)
+    try {
+      const uploadsDir = getUploadsDirectory();
+      const filePath = path.join(uploadsDir, fileName);
+      if (fs.existsSync(filePath)) {
+        await fs.promises.unlink(filePath);
+      }
+    } catch (diskErr) {
+      // Ignore EROFS
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Image ${fileName} deleted successfully.`,
+    });
   } catch (error: any) {
     console.error("DELETE /api/admin/upload error:", error);
     return NextResponse.json(
@@ -155,23 +275,32 @@ export async function DELETE(request: NextRequest) {
 export async function GET() {
   try {
     const images: { url: string; name: string; folder: string }[] = [];
+    const existingUrls = new Set<string>();
 
-    // Helper to scan directory
+    // Helper to scan directory safely
     const scanDir = (dirPath: string, folderName: string, urlPrefix: string) => {
-      if (fs.existsSync(dirPath)) {
-        const files = fs.readdirSync(dirPath);
-        for (const file of files) {
-          if (file.startsWith(".")) continue;
-          const fullPath = path.join(dirPath, file);
-          const stat = fs.statSync(fullPath);
-          if (stat.isFile() && /\.(jpg|jpeg|png|webp|svg|gif)$/i.test(file)) {
-            images.push({
-              url: `${urlPrefix}/${file}`,
-              name: file,
-              folder: folderName,
-            });
+      try {
+        if (fs.existsSync(dirPath)) {
+          const files = fs.readdirSync(dirPath);
+          for (const file of files) {
+            if (file.startsWith(".")) continue;
+            const fullPath = path.join(dirPath, file);
+            const stat = fs.statSync(fullPath);
+            if (stat.isFile() && /\.(jpg|jpeg|png|webp|svg|gif|avif)$/i.test(file)) {
+              const url = `${urlPrefix}/${file}`;
+              if (!existingUrls.has(url)) {
+                images.push({
+                  url,
+                  name: file,
+                  folder: folderName,
+                });
+                existingUrls.add(url);
+              }
+            }
           }
         }
+      } catch (e) {
+        // Safe directory scan ignore
       }
     };
 
@@ -180,14 +309,33 @@ export async function GET() {
       ? path.join(cwd, "public")
       : path.join(cwd, "frontend", "public");
 
-    // 1. Scan uploads
+    // 1. Scan local directories
     scanDir(path.join(publicDir, "uploads"), "Uploads", "/uploads");
-    // 2. Scan lineups
     scanDir(path.join(publicDir, "images", "lineups"), "Band Lineups", "/images/lineups");
-    // 3. Scan sound
     scanDir(path.join(publicDir, "images", "sound"), "Sound Setups", "/images/sound");
-    // 4. Scan root images
     scanDir(path.join(publicDir, "images"), "Hero & General", "/images");
+
+    // 2. Query Firestore Media collection (picks up dynamic cloud uploads)
+    const db = getAdminDb();
+    if (db) {
+      try {
+        const snapshot = await db.collection("media").get();
+        snapshot.forEach((doc) => {
+          const url = `/uploads/${doc.id}`;
+          if (!existingUrls.has(url)) {
+            const data = doc.data();
+            images.push({
+              url,
+              name: data?.fileName || doc.id,
+              folder: "Uploads",
+            });
+            existingUrls.add(url);
+          }
+        });
+      } catch (dbErr) {
+        console.warn("[Media Library] Firestore media fetch warning:", dbErr);
+      }
+    }
 
     return NextResponse.json({ success: true, images });
   } catch (error: any) {

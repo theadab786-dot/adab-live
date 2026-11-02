@@ -1,10 +1,17 @@
 import { Resend } from "resend";
 import { BookingPayload } from "./schemas";
 
-const resendApiKey = process.env.RESEND_API_KEY;
+const resendApiKey = process.env.RESEND_API_KEY?.trim();
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
-const OWNER_EMAIL = process.env.OWNER_EMAIL || "owner@adablive.com";
-const FROM_EMAIL = process.env.FROM_EMAIL || "booking@adablive.com";
+const OWNER_EMAIL = (process.env.OWNER_EMAIL || "owner@adablive.com").trim();
+
+// Automatically safeguard against sandbox test addresses like 'onboarding@resend.dev'
+// which fail with 403 when sending to real recipients. Default to verified domain booking@adablive.com.
+const rawFromEmail = process.env.FROM_EMAIL?.trim();
+const FROM_EMAIL =
+  rawFromEmail && !rawFromEmail.includes("resend.dev")
+    ? rawFromEmail
+    : "booking@adablive.com";
 
 export async function sendBookingNotificationEmails(booking: BookingPayload & { id: string }) {
   if (!resend) {
@@ -23,11 +30,12 @@ export async function sendBookingNotificationEmails(booking: BookingPayload & { 
   }
 
   try {
-    // Dispatch both owner notification and customer acknowledgement in parallel
-    const [ownerRes, customerRes] = await Promise.all([
+    // Dispatch both owner notification and customer acknowledgement independently
+    const [ownerRes, customerRes] = await Promise.allSettled([
       resend.emails.send({
         from: `Adab Live Bookings <${FROM_EMAIL}>`,
         to: OWNER_EMAIL,
+        replyTo: booking.contact.email,
         subject: `🎵 New Booking Request: ${booking.contact.name} (${booking.event.date})`,
         html: `
         <div style="font-family: sans-serif; padding: 20px; color: #111;">
@@ -52,6 +60,7 @@ export async function sendBookingNotificationEmails(booking: BookingPayload & { 
       resend.emails.send({
         from: `Adab Live <${FROM_EMAIL}>`,
         to: booking.contact.email,
+        replyTo: OWNER_EMAIL,
         subject: `We received your booking request! - Adab Live`,
         html: `
         <div style="font-family: sans-serif; padding: 20px; color: #111;">
@@ -66,17 +75,23 @@ export async function sendBookingNotificationEmails(booking: BookingPayload & { 
       }),
     ]);
 
-    if (ownerRes.error || customerRes.error) {
-      console.error("[Resend API Warning] Email dispatch encountered errors:", {
-        ownerError: ownerRes.error,
-        customerError: customerRes.error,
+    const ownerData = ownerRes.status === "fulfilled" ? ownerRes.value : { error: ownerRes.reason };
+    const customerData = customerRes.status === "fulfilled" ? customerRes.value : { error: customerRes.reason };
+
+    const ownerError = ownerData.error;
+    const customerError = customerData.error;
+
+    if (ownerError || customerError) {
+      console.error("[Resend API Warning] Email dispatch encountered issues:", {
+        ownerError,
+        customerError,
       });
       return {
-        success: false,
+        success: !ownerError,
         mode: "live",
-        error: ownerRes.error?.message || customerRes.error?.message || "Email delivery failed",
-        ownerError: ownerRes.error,
-        customerError: customerRes.error,
+        error: ownerError?.message || customerError?.message || "Email delivery failed",
+        ownerError,
+        customerError,
       };
     }
 
@@ -132,6 +147,7 @@ export async function sendBookingStatusEmail(
     const res = await resend.emails.send({
       from: `Adab Live <${FROM_EMAIL}>`,
       to: booking.contact.email,
+      replyTo: OWNER_EMAIL,
       subject,
       html,
     });

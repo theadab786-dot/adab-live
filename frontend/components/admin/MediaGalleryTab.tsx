@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { compressImage } from "@/lib/imageCompressor";
 import {
   Upload,
   Trash2,
@@ -57,17 +58,30 @@ export function MediaGalleryTab() {
 
     try {
       for (let i = 0; i < files.length; i++) {
-        const formData = new FormData();
-        formData.append("file", files[i]);
+        let file = files[i];
+        try {
+          file = await compressImage(file);
+        } catch (compressErr) {
+          console.warn("Client compression skipped:", compressErr);
+        }
 
-        await fetch("/api/admin/upload", {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/admin/upload", {
           method: "POST",
           body: formData,
         });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "Failed to upload file.");
+        }
       }
       await fetchImages();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload error:", err);
+      alert(err.message || "Failed to upload image.");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
